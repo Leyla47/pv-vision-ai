@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Sanal ortamlar
+.venv/
+venv/
+env/
+
+# Sistem ve gizli dosyalar
+.env
+.env.*
+.DS_Store
+
+# Veri setleri ve buyuk dosyalar
+data/raw/*
+data/processed/*
+outputs/
+runs/
+yolov8n.pt
+*.onnx
+*.engine
+
+# Model dosyalari
+models/weights/*
+!models/weights/.gitkeep
+!models/weights/best.pt
+!models/weights/model_info.json
+
+# Bos klasorler
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Notebook gecici dosyalari
+.ipynb_checkpoints/
