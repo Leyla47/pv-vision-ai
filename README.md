@@ -4,6 +4,12 @@ PV Vision AI, fotovoltaik güneş hücrelerinin elektrolüminesans (EL) görünt
 
 V1 hedefi; kullanıcının bir EL görüntüsü yüklediği, sistemin eğitilmiş bir YOLO modeliyle kusurları tespit ettiği ve sonucu Türkçe, anlaşılır bir Streamlit arayüzünde gösterdiği çalışan bir uygulama geliştirmektir.
 
+## Canlı Uygulama
+
+[PV Vision AI'ı Streamlit Community Cloud'da aç](https://pv-vision-ai.streamlit.app/)
+
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://pv-vision-ai.streamlit.app/)
+
 ## Proje Kapsamı
 
 - PVEL-AD veri setinin incelenmesi
