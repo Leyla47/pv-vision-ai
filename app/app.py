@@ -6,6 +6,7 @@ import base64
 import hashlib
 import json
 import sys
+from functools import lru_cache
 from pathlib import Path
 
 import streamlit as st
@@ -45,7 +46,7 @@ MAX_UPLOAD_SIZE = 20 * 1024 * 1024
 MIN_IMAGE_DIMENSION = 128
 ANALYSIS_RESULT_KEY = "pv_vision_analysis_result"
 ANALYSIS_REQUEST_KEY = "pv_vision_analysis_request"
-HERO_IMAGE_PATH = Path(__file__).resolve().parent / "assets" / "solar-panel-hero.png"
+HERO_IMAGE_PATH = Path(__file__).resolve().parent / "assets" / "solar-panel-hero.webp"
 ANALYSIS_DISCLAIMER = (
     "Sağlık skoru, üretim performansı ve ekonomik kayıp değerleri görüntü üzerinden "
     "tespit edilen kusurlara dayalı tahmini sonuçlardır. Gerçek elektriksel ölçüm, "
@@ -671,11 +672,12 @@ def _safe_css_token(value: object) -> str:
     return token if token in {"success", "info", "warning"} else "warning"
 
 
+@lru_cache(maxsize=1)
 def _hero_data_uri() -> str:
     if not HERO_IMAGE_PATH.exists():
         return ""
     encoded = base64.b64encode(HERO_IMAGE_PATH.read_bytes()).decode("ascii")
-    return f"data:image/png;base64,{encoded}"
+    return f"data:image/webp;base64,{encoded}"
 
 
 def _inject_styles() -> None:

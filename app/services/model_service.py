@@ -6,11 +6,14 @@ from dataclasses import dataclass
 from functools import lru_cache
 from importlib.util import find_spec
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
-from ultralytics import YOLO
+
+if TYPE_CHECKING:
+    from ultralytics import YOLO
 
 from config import CLASS_ID_TO_NAME_TR, MODEL_WEIGHTS_PATH
 
@@ -57,6 +60,8 @@ def load_model(model_path: Path = MODEL_WEIGHTS_PATH) -> YOLO:
     """Eğitilmiş YOLO modelini yükler."""
     if not model_path.exists():
         raise FileNotFoundError(f"Model dosyası bulunamadı: {model_path}")
+    from ultralytics import YOLO
+
     return YOLO(str(model_path))
 
 

@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import subprocess
+import sys
 import unittest
 from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
+from PIL import Image
 from streamlit.testing.v1 import AppTest
 
 from app import app as streamlit_app
@@ -15,10 +18,35 @@ from app.services.maintenance_service import build_maintenance_plan
 from app.services.model_service import DetectionResult
 from app.services.performance_service import estimate_production_performance
 from app.services.quality_service import assess_quality
-from config import APP_DIR, DEFAULT_REFERENCE_PRICE, REPORTS_DIR
+from config import (
+    APP_DIR,
+    DEFAULT_REFERENCE_PRICE,
+    MODEL_WEIGHTS_PATH,
+    PROJECT_ROOT,
+    REPORTS_DIR,
+)
 
 
 class StreamlitAppTests(unittest.TestCase):
+    def test_app_import_defers_ultralytics_and_torch(self) -> None:
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                (
+                    "import sys; import app.app; "
+                    "assert 'ultralytics' not in sys.modules; "
+                    "assert 'torch' not in sys.modules"
+                ),
+            ],
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_app_opens_without_exception(self) -> None:
         app = AppTest.from_file(str(APP_DIR / "app.py"), default_timeout=30)
         app.run()
@@ -42,6 +70,13 @@ class StreamlitAppTests(unittest.TestCase):
                     for expander in app.expander
                 )
             )
+
+    def test_hero_uses_optimized_webp_asset(self) -> None:
+        self.assertEqual(streamlit_app.HERO_IMAGE_PATH.suffix, ".webp")
+        self.assertLessEqual(streamlit_app.HERO_IMAGE_PATH.stat().st_size, 350_000)
+        with Image.open(streamlit_app.HERO_IMAGE_PATH) as hero:
+            self.assertEqual(hero.size, (1774, 887))
+        self.assertTrue(streamlit_app._hero_data_uri().startswith("data:image/webp;base64,"))
 
     def test_candidate_and_final_stages_have_distinct_status_tones(self) -> None:
         cases = [
@@ -76,6 +111,18 @@ class StreamlitAppTests(unittest.TestCase):
         self.assertEqual(app.number_input[1].value, DEFAULT_REFERENCE_PRICE)
         self.assertEqual(app.selectbox[0].label, "Para birimi")
         self.assertEqual(app.selectbox[0].options, ["TRY", "USD", "EUR"])
+
+    @unittest.skipUnless(MODEL_WEIGHTS_PATH.exists(), "best.pt bulunmuyor.")
+    def test_real_model_is_reused_from_resource_cache(self) -> None:
+        model_version = MODEL_WEIGHTS_PATH.stat().st_mtime_ns
+        streamlit_app.get_cached_model.clear()
+        try:
+            first = streamlit_app.get_cached_model(str(MODEL_WEIGHTS_PATH), model_version)
+            second = streamlit_app.get_cached_model(str(MODEL_WEIGHTS_PATH), model_version)
+        finally:
+            streamlit_app.get_cached_model.clear()
+
+        self.assertIs(first, second)
 
     def test_text_report_contains_health_maintenance_and_loss_results(self) -> None:
         detections = pd.DataFrame(
